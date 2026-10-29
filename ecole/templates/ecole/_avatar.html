@@ -1,0 +1,1 @@
+{% if e.photo %}<img src="{{ e.photo.url }}" alt="{{ e.nom }}" class="avatar" style="width:{{ t }}px;height:{{ t }}px">{% else %}<span class="avatar" style="width:{{ t }}px;height:{{ t }}px;font-size:{{ t }}px;font-size:calc({{ t }}px * .38)">{{ e.initiales }}</span>{% endif %}

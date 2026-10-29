@@ -1,0 +1,11 @@
+{% extends "ecole/base.html" %}
+{% block contenu %}
+<h1 class="text-2xl font-extrabold mb-4" style="color:#1E40AF">Cartes scolaires</h1>
+<div class="bg-white rounded-2xl shadow divide-y max-w-2xl">
+  {% for e in eleves %}
+  <div class="p-4 flex items-center gap-3">{% include "ecole/_avatar.html" with e=e t=44 %}
+    <div class="flex-1"><div class="font-semibold">{{ e.nom }}</div><div class="text-xs text-slate-500">{{ e.classe }} · {{ e.matricule }}</div></div>
+    <a href="{% url 'carte' e.pk %}" class="px-3 py-2 rounded-lg text-white text-xs font-bold" style="background:#1E40AF">Ouvrir la carte</a></div>
+  {% endfor %}
+</div>
+{% endblock %}

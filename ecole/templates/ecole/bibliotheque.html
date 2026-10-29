@@ -1,0 +1,30 @@
+{% extends "ecole/base.html" %}
+{% block contenu %}
+<div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+  <h1 class="text-2xl font-extrabold" style="color:#1E40AF">Bibliothèque en ligne</h1>
+  <a href="{% url 'mes_emprunts' %}" class="text-sm font-bold px-4 py-2 rounded-lg border-2" style="color:#1E40AF;border-color:#1E40AF">📚 Mes emprunts</a>
+</div>
+<form method="get" class="mb-5"><input name="q" value="{{ q }}" placeholder="🔍 Rechercher un titre, un auteur…" class="w-full border rounded-xl px-4 py-3 bg-white"></form>
+<div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+  {% for l in livres %}
+  <div class="bg-white rounded-2xl shadow p-4 flex flex-col gap-3">
+    <div class="rounded-xl flex items-end p-3 text-white font-bold leading-tight text-lg" style="background:{{ l.couleur }};height:150px">📘 {{ l.titre }}</div>
+    <div><div class="font-bold">{{ l.titre }}</div><div class="text-xs text-slate-500">{{ l.auteur }}{% if l.categorie %} · {{ l.categorie }}{% endif %}</div>
+      <span class="inline-block mt-2 text-xs font-bold px-2 py-1 rounded-full {% if l.disponible %}bg-green-100 text-green-700{% else %}bg-amber-100 text-amber-700{% endif %}">{% if l.disponible %}Disponible{% else %}Emprunté{% endif %}</span></div>
+    <div class="flex gap-2 mt-auto">
+      <a href="{% url 'lire_livre' l.pk %}" target="_blank" class="flex-1 text-center py-2 rounded-lg border-2 text-sm font-bold" style="color:#1E40AF;border-color:#1E40AF">Lire PDF</a>
+      <button onclick="document.getElementById('res-{{ l.pk }}').showModal()" class="flex-1 py-2 rounded-lg text-white text-sm font-bold" style="background:#1E40AF">Réserver</button>
+    </div>
+  </div>
+  <dialog id="res-{{ l.pk }}" class="rounded-2xl p-5 w-full max-w-sm shadow-2xl">
+    <form method="post" action="{% url 'reserver' l.pk %}">{% csrf_token %}
+      <h3 class="font-bold mb-3" style="color:#1E40AF">Réserver : {{ l.titre }}</h3>
+      <label class="text-sm font-semibold">Matricule de l’élève</label>
+      <input name="matricule" required placeholder="SHULE-2026-001" class="w-full border rounded-lg px-3 py-2 mt-1 font-mono">
+      <div class="flex gap-2 mt-4"><button type="button" onclick="this.closest('dialog').close()" class="flex-1 py-2 rounded-lg border font-semibold">Annuler</button>
+      <button class="flex-1 py-2 rounded-lg text-white font-bold" style="background:#1E40AF">Confirmer</button></div>
+    </form>
+  </dialog>
+  {% empty %}<p class="text-slate-500 col-span-full">Aucun livre trouvé.</p>{% endfor %}
+</div>
+{% endblock %}

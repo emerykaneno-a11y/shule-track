@@ -1,0 +1,24 @@
+{% extends "ecole/base.html" %}
+{% block titre %}Carte – {{ e.nom }}{% endblock %}
+{% block contenu %}
+<div class="max-w-md mx-auto">
+  <div class="noprint flex gap-2 mb-5">
+    <a href="{% url 'cartes' %}" class="px-4 py-2 rounded-lg border font-semibold bg-white">← Liste</a>
+    <button onclick="window.print()" class="px-5 py-2 rounded-lg text-white font-bold" style="background:#1E40AF">🖨️ Imprimer</button>
+  </div>
+  <div class="printarea bg-white rounded-2xl shadow-xl overflow-hidden mx-auto" style="max-width:420px">
+    <div class="px-5 py-3 text-white flex items-center justify-between" style="background:#1E40AF">
+      <div><div class="font-black tracking-wide">SHULE TRACK</div><div class="text-[11px] text-blue-200">Carte scolaire · Burundi</div></div>
+      <div class="text-xs font-bold bg-white/20 px-2 py-1 rounded">{% now "Y" %}</div></div>
+    <div class="p-5 flex gap-4 items-center">{% include "ecole/_avatar.html" with e=e t=96 %}
+      <div class="flex-1 min-w-0"><div class="text-[10px] uppercase tracking-widest text-slate-400">Élève</div>
+        <div class="text-lg font-black leading-tight">{{ e.nom }}</div>
+        <div class="text-sm mt-1"><b>Classe :</b> {{ e.classe }}</div>
+        <div class="text-sm font-mono"><b class="font-sans">Matricule :</b> {{ e.matricule }}</div></div></div>
+    <div class="px-5 pb-5 flex items-end justify-between gap-3">
+      <div class="text-[11px] text-slate-500">Tél. parent<br><b class="text-slate-800 text-sm">{{ e.parent_telephone }}</b><br><br>Présentez cette carte<br>au surveillant à chaque<br>entrée et sortie.</div>
+      <div class="text-center">{% if e.qr_image %}<img src="{{ e.qr_image.url }}" width="130" height="130" alt="QR">{% endif %}<div class="font-mono text-[10px] text-slate-600">{{ e.qr_code_id }}</div></div></div>
+    <div class="h-2" style="background:#1E40AF"></div>
+  </div>
+</div>
+{% endblock %}
