@@ -1,0 +1,43 @@
+{% extends "ecole/base.html" %}
+{% block head %}<meta http-equiv="refresh" content="30">{% endblock %}
+{% block contenu %}
+<div class="flex flex-wrap items-end justify-between gap-3 mb-4">
+  <div><h1 class="text-2xl font-extrabold" style="color:#1E40AF">Tableau de bord</h1>
+  <p class="text-sm text-slate-500">{{ aujourdhui|date:"l j F Y" }} · mise à jour automatique toutes les 30 s</p></div>
+  <form method="get"><select name="classe" onchange="this.form.submit()" class="border rounded-lg px-3 py-2 bg-white font-semibold text-sm">
+    <option value="">Toutes les classes</option>
+    {% for c in classes %}<option value="{{ c.pk }}" {% if classe and classe.pk == c.pk %}selected{% endif %}>{{ c.nom }}</option>{% endfor %}
+  </select></form>
+</div>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+  <div class="bg-white rounded-2xl shadow p-5 border-t-4 border-green-600"><div class="text-sm font-semibold text-slate-500">Présents aujourd’hui</div><div class="text-5xl font-black text-green-700">{{ s.presents }}</div><div class="text-xs text-slate-400">sur {{ s.total }} élèves</div></div>
+  <div class="bg-white rounded-2xl shadow p-5 border-t-4 border-red-600"><div class="text-sm font-semibold text-slate-500">Absents</div><div class="text-5xl font-black text-red-600">{{ s.absents }}</div><div class="text-xs text-slate-400">aucune entrée enregistrée</div></div>
+  <div class="bg-white rounded-2xl shadow p-5 border-t-4 border-amber-500"><div class="text-sm font-semibold text-slate-500">Retards</div><div class="text-5xl font-black text-amber-600">{{ s.retards }}</div><div class="text-xs text-slate-400">après {{ limite }}</div></div>
+  <div class="bg-white rounded-2xl shadow p-5 border-t-4 border-blue-800"><div class="text-sm font-semibold text-slate-500">Actuellement à l’école</div><div class="text-5xl font-black text-blue-800">{{ s.dedans }}</div><div class="text-xs text-slate-400">en temps réel</div></div>
+</div>
+<div class="grid lg:grid-cols-2 gap-4 mt-6">
+  <section class="bg-white rounded-2xl shadow p-5">
+    <h2 class="font-bold text-lg mb-3">Élèves non entrés <span class="text-red-600">({{ s.absents }})</span></h2>
+    {% for e in s.non_entres %}
+    <div class="py-3 flex items-center gap-3 border-t first:border-0">
+      {% include "ecole/_avatar.html" with e=e t=44 %}
+      <div class="flex-1 min-w-0"><div class="font-semibold truncate">{{ e.nom }}</div><div class="text-xs text-slate-500">{{ e.classe }} · {{ e.matricule }}</div></div>
+      <a href="https://wa.me/257{{ e.telephone_parent }}?text=Bonjour,%20votre%20enfant%20{{ e.nom }}%20({{ e.classe }})%20n'est%20pas%20encore%20entré%20ce%20matin.%20SHULE%20TRACK" target="_blank" class="text-xs whitespace-nowrap" style="background:#1E40AF; color:white; padding:4px 10px; border-radius:20px; display:inline-flex; align-items:center; gap:4px"> WhatsApp parent</a>
+    </div>
+    {% empty %}<p class="text-green-700 font-semibold">✅ Tous les élèves sont arrivés.</p>{% endfor %}
+  </section>
+  <section class="bg-white rounded-2xl shadow p-5">
+    <h2 class="font-bold text-lg mb-3">Tous les élèves</h2>
+    {% for l in s.lignes %}
+    <div class="py-3 flex items-center gap-3 border-t first:border-0">
+      {% include "ecole/_avatar.html" with e=l.eleve t=44 %}
+      <div class="flex-1 min-w-0"><div class="font-semibold truncate">{{ l.eleve.nom }}</div><div class="text-xs text-slate-500">{{ l.eleve.classe }}{% if l.heure %} · arrivé {{ l.heure|time:"H:i" }}{% endif %}</div></div>
+      {% if not l.entre %}<span class="text-xs font-bold px-2 py-1 rounded-full bg-red-100 text-red-700">Absent</span>
+      {% elif l.retard %}<span class="text-xs font-bold px-2 py-1 rounded-full bg-amber-100 text-amber-700">Retard</span>
+      {% else %}<span class="text-xs font-bold px-2 py-1 rounded-full bg-green-100 text-green-700">Présent</span>{% endif %}
+      {% if l.entre %}<span class="text-xs" title="{% if l.dedans %}À l’école{% else %}Sorti{% endif %}">{% if l.dedans %}🏫{% else %}🚪{% endif %}</span>{% endif %}
+    </div>
+    {% endfor %}
+  </section>
+</div>
+{% endblock %}

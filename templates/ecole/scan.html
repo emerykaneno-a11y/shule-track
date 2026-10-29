@@ -1,0 +1,90 @@
+{% extends "ecole/base.html" %}
+{% block contenu %}
+<div class="max-w-2xl mx-auto">
+  <h1 class="text-2xl font-extrabold mb-1" style="color:#1E40AF">Scan Entrée / Sortie</h1>
+  <p class="text-sm text-slate-500 mb-5">Poste du surveillant · portail principal</p>
+  {% csrf_token %}
+  <button id="btn-scan" class="w-full py-10 rounded-3xl text-white text-3xl font-black shadow-lg active:scale-95 transition" style="background:#1E40AF">📷 SCANNER CARTE</button>
+  <div id="camera-zone" class="hidden mt-4 bg-white rounded-2xl shadow p-3"><div id="reader" style="width:100%"></div>
+    <button id="btn-stop" class="mt-2 text-sm font-semibold text-red-600">Arrêter la caméra</button></div>
+  <form id="form-manuel" class="mt-4 flex gap-2">
+    <input id="code" autofocus autocomplete="off" placeholder="Douchette USB ou saisie : code QR / matricule" class="flex-1 border rounded-xl px-4 py-3 bg-white">
+    <button class="px-5 rounded-xl text-white font-bold" style="background:#1E40AF">OK</button>
+  </form>
+  <button id="btn-demo" class="mt-2 text-xs font-semibold underline text-slate-500">Mode démo : simuler un scan au hasard</button>
+
+  <div id="resultat" class="min-h-[170px] mt-5"></div>
+
+  <section class="bg-white rounded-2xl shadow p-5 mt-2">
+    <h2 class="font-bold text-lg mb-3">Historique des scans du jour (<span id="nb">{{ passages|length }}</span>)</h2>
+    <ul id="histo" class="divide-y">
+      {% for p in passages %}
+      <li class="py-2 flex items-center gap-3">
+        {% include "ecole/_avatar.html" with e=p.eleve t=36 %}
+        <div class="flex-1 text-sm"><b>{{ p.eleve.nom }}</b> <span class="text-slate-400">· {{ p.eleve.classe }}</span></div>
+        <span class="text-xs font-bold px-2 py-1 rounded-full {% if p.type == 'ENTREE' %}bg-green-100 text-green-700{% else %}bg-blue-100 text-blue-800{% endif %}">{% if p.type == 'ENTREE' %}ENTRÉE{% else %}SORTIE{% endif %}</span>
+        <span class="font-mono text-sm w-12 text-right">{{ p.horodatage|time:"H:i" }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+const URL_API = "{% url 'scan_api' %}";
+const csrf = () => document.querySelector("[name=csrfmiddlewaretoken]").value;
+const box = document.getElementById("resultat");
+let timer = null, verrou = false;
+
+function avatar(d, t) {
+  return d.photo ? `<img src="${d.photo}" class="avatar" style="width:${t}px;height:${t}px">`
+    : `<span class="avatar" style="width:${t}px;height:${t}px;font-size:${t*0.38}px">${d.initiales}</span>`;
+}
+function afficher(d) {
+  clearTimeout(timer);
+  let couleur = "#16A34A", titre = "";
+  if (!d.ok) { couleur = "#DC2626"; box.innerHTML = `<div class="rounded-2xl p-5 text-white shadow-lg" style="background:${couleur}"><div class="text-xl font-black">✖ ${d.message}</div></div>`; }
+  else if (d.doublon) { couleur = "#D97706"; box.innerHTML = `<div class="rounded-2xl p-5 text-white shadow-lg" style="background:${couleur}"><div class="font-black">${d.nom}</div><div>${d.message}</div></div>`; }
+  else {
+    titre = d.type === "ENTREE" ? "Entrée validée" : "Sortie validée";
+    box.innerHTML = `<div class="rounded-2xl p-5 text-white shadow-lg" style="background:${couleur}">
+      <div class="flex items-center gap-4">${avatar(d, 84)}
+      <div><div class="text-xs font-bold uppercase tracking-widest">✔ ${titre}${d.retard ? " · RETARD" : ""}</div>
+      <div class="text-2xl font-black">${d.nom}</div><div class="text-sm">${d.classe} · ${d.matricule}</div>
+      <div class="text-xl font-bold mt-1">${d.heure}</div></div></div>
+      <div class="mt-3 bg-white/20 rounded-lg px-3 py-2 text-sm">${d.message}</div></div>`;
+    const li = document.createElement("li");
+    li.className = "py-2 flex items-center gap-3";
+    li.innerHTML = `${avatar(d, 36)}<div class="flex-1 text-sm"><b>${d.nom}</b> <span class="text-slate-400">· ${d.classe}</span></div>
+      <span class="text-xs font-bold px-2 py-1 rounded-full ${d.type === "ENTREE" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-800"}">${d.type === "ENTREE" ? "ENTRÉE" : "SORTIE"}</span>
+      <span class="font-mono text-sm w-12 text-right">${d.heure}</span>`;
+    document.getElementById("histo").prepend(li);
+    document.getElementById("nb").textContent = document.querySelectorAll("#histo li").length;
+  }
+  timer = setTimeout(() => box.innerHTML = "", 3000);   // confirmation visible 3 secondes
+}
+async function envoyer(payload) {
+  if (verrou) return; verrou = true; setTimeout(() => verrou = false, 1500);
+  try {
+    const r = await fetch(URL_API, {method: "POST", headers: {"Content-Type": "application/json", "X-CSRFToken": csrf()}, body: JSON.stringify(payload)});
+    afficher(await r.json());
+  } catch (e) { afficher({ok: false, message: "Erreur de connexion au serveur."}); }
+}
+document.getElementById("form-manuel").addEventListener("submit", e => {
+  e.preventDefault(); const c = document.getElementById("code");
+  if (c.value.trim()) envoyer({code: c.value.trim()}); c.value = ""; c.focus();
+});
+document.getElementById("btn-demo").onclick = () => envoyer({aleatoire: true});
+let scanner = null;
+document.getElementById("btn-scan").onclick = async () => {
+  if (typeof Html5Qrcode === "undefined") { document.getElementById("code").focus(); return afficher({ok: false, message: "Caméra indisponible (pas d’internet ou navigateur non compatible). Utilisez la douchette ou la saisie."}); }
+  document.getElementById("camera-zone").classList.remove("hidden");
+  scanner = new Html5Qrcode("reader");
+  try { await scanner.start({facingMode: "environment"}, {fps: 10, qrbox: 220}, txt => envoyer({code: txt})); }
+  catch (e) { afficher({ok: false, message: "Impossible d’ouvrir la caméra (autorisation refusée ou connexion non sécurisée)."}); }
+};
+document.getElementById("btn-stop").onclick = async () => { if (scanner) { await scanner.stop(); scanner = null; } document.getElementById("camera-zone").classList.add("hidden"); };
+</script>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends "ecole/base.html" %}
+{% block contenu %}
+<div class="max-w-xl mx-auto bg-white rounded-2xl shadow p-6">
+  <h1 class="text-xl font-extrabold" style="color:#1E40AF">{{ livre.titre }}</h1>
+  <p class="text-sm text-slate-500 mb-4">{{ livre.auteur }}</p>
+  <p class="text-slate-600">Aucun fichier PDF n’est encore associé à ce livre. Ajoutez-le depuis l’administration (<b>Livres → fichier PDF</b>) et il s’ouvrira ici.</p>
+  <a href="{% url 'bibliotheque' %}" class="inline-block mt-4 font-semibold" style="color:#1E40AF">← Retour à la bibliothèque</a>
+</div>
+{% endblock %}

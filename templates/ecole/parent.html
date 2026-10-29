@@ -1,0 +1,33 @@
+{% extends "ecole/base.html" %}
+{% block contenu %}
+<div class="max-w-2xl mx-auto">
+  <h1 class="text-2xl font-extrabold mb-1" style="color:#1E40AF">Espace Parent</h1>
+  <p class="text-sm text-slate-500 mb-4">Suivez la présence et les emprunts de votre enfant.</p>
+  <form method="get" class="bg-white rounded-2xl shadow p-5">
+    <label class="text-sm font-semibold">Matricule de l’enfant</label>
+    <div class="flex gap-2 mt-1"><input name="matricule" value="{{ mat }}" placeholder="SHULE-2026-001" class="flex-1 border-2 rounded-xl px-4 py-3 font-mono text-lg">
+    <button class="px-5 rounded-xl text-white font-bold" style="background:#1E40AF">Voir</button></div>
+    {% if mat and not eleve %}<p class="text-red-600 text-sm mt-2">Matricule non reconnu.</p>{% endif %}
+  </form>
+  {% if eleve %}
+  <div class="mt-4 space-y-4">
+    <div class="bg-white rounded-2xl shadow p-5 flex items-center gap-4">
+      {% include "ecole/_avatar.html" with e=eleve t=80 %}
+      <div class="flex-1"><div class="text-xl font-black">{{ eleve.nom }}</div><div class="text-sm text-slate-500">{{ eleve.classe }} · {{ eleve.matricule }}</div>
+        <div class="mt-2 inline-block px-3 py-1 rounded-full text-sm font-bold {% if statut.dedans %}bg-green-100 text-green-700{% elif statut.entre %}bg-blue-100 text-blue-800{% else %}bg-red-100 text-red-700{% endif %}">
+          {% if statut.dedans %}🟢 Présent à l’école depuis {{ statut.premiere_entree|time:"H:i" }}{% if statut.retard %} (retard){% endif %}
+          {% elif statut.entre %}🚪 Sorti à {{ statut.derniere|time:"H:i" }}
+          {% else %}🔴 Pas encore arrivé aujourd’hui{% endif %}</div></div>
+    </div>
+    <div class="bg-white rounded-2xl shadow p-5"><h2 class="font-bold mb-3">Historique des 7 derniers jours</h2>
+      {% for h in historique %}
+      <div class="py-2 flex justify-between text-sm border-t first:border-0"><span>{{ h.jour|date:"l j F" }}</span>
+        {% if h.present %}<b class="{% if h.retard %}text-amber-600{% else %}text-green-700{% endif %}">Présent · {{ h.heure|time:"H:i" }}{% if h.retard %} (retard){% endif %}</b>{% else %}<b class="text-red-600">Absent</b>{% endif %}</div>
+      {% endfor %}</div>
+    <div class="bg-white rounded-2xl shadow p-5"><h2 class="font-bold mb-3">Livres empruntés</h2>
+      {% for e in emprunts %}<div class="flex justify-between text-sm py-1"><span>📘 {{ e.livre.titre }}</span><span class="text-amber-700 font-semibold">retour {{ e.date_retour_prevue|date:"d/m/Y" }}</span></div>
+      {% empty %}<p class="text-sm text-slate-500">Aucun livre emprunté.</p>{% endfor %}</div>
+    <a href="{% url 'carte' eleve.pk %}" class="block text-center py-3 rounded-xl text-white font-bold" style="background:#1E40AF">🪪 Voir la carte scolaire</a>
+  </div>{% endif %}
+</div>
+{% endblock %}
