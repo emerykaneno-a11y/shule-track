@@ -1,10 +1,14 @@
-from pathlib import Path
 import os
+from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = os.environ.get('SECRET_KEY', "shule-track-bujumbura-2025-super-secret")
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
-ALLOWED_HOSTS = ['*', '.vercel.app']
+
+SECRET_KEY = os.environ.get('SECRET_KEY', 'shule-track-bujumbura-2025-super-secret')
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+
+ALLOWED_HOSTS = ['.vercel.app', '.now.sh', '127.0.0.1', 'localhost', 'shule-track-syv6.vercel.app']
+
+# Application definition...
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -45,21 +49,23 @@ TEMPLATES = [
     },
 ]
 WSGI_APPLICATION = "config.wsgi.application"
+# Database - FIX pour Vercel
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        'NAME': BASE_DIR / 'db.sqlite3' if not os.environ.get('VERCEL') else '/tmp/db.sqlite3',
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': Path('/tmp/db.sqlite3') if os.environ.get('VERCEL') else BASE_DIR / 'db.sqlite3',
     }
 }
-AUTH_PASSWORD_VALIDATORS = []
-LANGUAGE_CODE = "fr-fr"
-TIME_ZONE = "Africa/Bujumbura"
-USE_I18N = True
-USE_TZ = True
-STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+
+# Static files - FIX pour Vercel
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles_build', 'static')
+STATICFILES_DIRS = []
+if (BASE_DIR / 'static').exists():
+    STATICFILES_DIRS.append(BASE_DIR / 'static')
+
+# Pour Vercel
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 HEURE_LIMITE_RETARD = "07:30"
 DUREE_EMPRUNT_JOURS = 14
