@@ -1,8 +1,10 @@
 from pathlib import Path
+import os
+
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = "shule-track-bujumbura-2025-super-secret"
-DEBUG = True
-ALLOWED_HOSTS = ['*']
+SECRET_KEY = os.environ.get('SECRET_KEY', "shule-track-bujumbura-2025-super-secret")
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+ALLOWED_HOSTS = ['*', '.vercel.app']
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -46,7 +48,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        'NAME': BASE_DIR / 'db.sqlite3' if not os.environ.get('VERCEL') else '/tmp/db.sqlite3',
     }
 }
 AUTH_PASSWORD_VALIDATORS = []
