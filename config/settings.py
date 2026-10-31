@@ -1,6 +1,6 @@
 import os
+import dj_database_url
 from pathlib import Path
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'shule-track-bujumbura-2025-super-secret')
